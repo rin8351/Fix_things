@@ -241,7 +241,7 @@ class Time_fix:
         self.frame_rf_down.pack(side=TOP)
         self.frame_rf_down.bind_arrow_keys(self.frame_rf)
         self.frame_rf_down.bind_scroll_wheel(self.frame_rf)
-        self.inner_frame2 = self.frame_rf_down.display_widget(Frame, width=330, height=480, bg='#024379')
+        self.inner_frame2 = self.frame_rf_down.display_widget(Frame, width=330, height=480)
 
         self.y1 = 30
         self.list_cb = []
@@ -249,7 +249,7 @@ class Time_fix:
             self.list_cb.append(StringVar())
         for i in range(len(self.zan)):
             self.cb = Checkbutton(self.inner_frame2, text=self.zan[i], variable=self.list_cb[i], 
-                                onvalue=self.zan[i], offvalue='', font=self.font, width=15, height=1, anchor=W,bg='#024379', fg='#ffffff')
+                                onvalue=self.zan[i], offvalue='', font=self.font, width=15, height=1, anchor=W)
             self.cb.grid(row=i, column=0, pady=6, padx=4, sticky=W)
             self.bt = Button(self.inner_frame2, text='Удалить', command = lambda text=self.zan[i]: self.del_label(text), font=self.font, width=10, height=1)
             self.bt.grid(row=i, column=1, pady=6, padx=4)
@@ -259,7 +259,6 @@ class Time_fix:
             self.buton_down.grid(row=i, column=3, pady=6, padx=4)
             self.y1 += 40
             
-
     def move_label(self, text, direction):
         for i in range(len(self.zan)):
             if self.zan[i] == text:
