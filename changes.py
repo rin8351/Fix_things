@@ -1,6 +1,5 @@
 from tkinter import *
-from saving import PickClass, save_object, load_object
-import static
+from saving import PickClass, save_object
 
 class Change():
     def __init__(self, time_zan, tab3,spisok_del,tab2,table,update_comment,static_funk):
