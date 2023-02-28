@@ -5,6 +5,7 @@ from tkcalendar import Calendar as cl
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+from collections import defaultdict
 
 class Statistic():
     def __init__(self, time_zan, tab2):
@@ -85,14 +86,10 @@ class Statistic():
         self.lb_choose_zan = Label(self.inner_frame2, text="Выберите занятие",font=self.font, bg='#ffffff',fg='#0076A3')
         self.lb_choose_zan.grid(column=4, row=0)
 
-        self.spisok_cat = []
+        self.spisok_cat = [i for i in self.time_zan]
         self.spisok_cat2 = {}
         for i in self.time_zan:
-            self.spisok_cat.append(i)
-            a=[]
-            for j in self.time_zan[i]:
-                a.append(j)
-            self.spisok_cat2[i] = a
+            self.spisok_cat2[i] = [j for j in self.time_zan[i]]
         self.check_button_spisok(self.spisok_cat2, 4)
         self.check_button_spisok(self.spisok_cat, 1)
 
@@ -116,7 +113,6 @@ class Statistic():
             for value in spisok1:
                 var = BooleanVar()
                 check_button_cat = Checkbutton(self.inner_frame2, text=value, variable=var)
-                # утановить включность по умолчанию
                 check_button_cat.select()
                 check_button_cat.grid(column=num_col, row=z, sticky=W)
                 self.save_checb_cat[value] = var
@@ -145,10 +141,7 @@ class Statistic():
 
     def calendar_chose(self,text,date):
         self.top = Toplevel()
-        if text ==self.spisok_date_min0:
-            self.top.title("Начальная дата")
-        else:
-            self.top.title("Конечная дата")
+        self.top.title("Начальная дата") if text ==self.spisok_date_min0 else self.top.title("Конечная дата")
         text_cal = datetime.datetime.strptime(date, '%Y-%m-%d')
         self.calendars = cl(self.top, font=self.font, selectmode='day', year=text_cal.year, month=text_cal.month, day=text_cal.day)
         self.calendars.grid(column=1, row=1)
@@ -163,24 +156,21 @@ class Statistic():
             self.labelTop2.configure(text=str(self.calendars.selection_get()))
         self.top.destroy()
 
-    def cat_one(self, event):
-        name_button = event.widget.cget('text')
-        self.zapol_for_graph()
-
-        if name_button == 'Одна категория':
-            if len(self.cat_check) > 1:
-                self.err_gragh.config(text="Выберите только одну категорию")
-            else:
-                self.err_gragh.config(text="")
-                a = self.cat_one_graph
-                self.graphik(a)
+    @staticmethod
+    def check_size(lst, text1, text2):
+        if len(lst) > 1:
+            return text1
         else:
-            if len(self.cat_check2) > 1:
-                self.err_gragh.config(text="Выберите только одно занятие")
-            else:
-                self.err_gragh.config(text="")
-                a = self.zan_one_graph
-                self.graphik(a)
+            return text2
+
+    def cat_one(self, event):
+        self.zapol_for_graph()
+        if event.widget.cget('text') == 'Одна категория':
+            self.err_gragh.config(text=self.check_size(self.cat_check, "Выберите только одну категорию", ""))
+            self.graphik(self.cat_one_graph)
+        else:
+            self.err_gragh.config(text=self.check_size(self.cat_check2, "Выберите только одно занятие", ""))
+            self.graphik(self.zan_one_graph)
 
     def graphik(self,a):
         new = {}
@@ -201,19 +191,14 @@ class Statistic():
                     dates_list.append(start_date.strftime('%Y-%m-%d'))
                     start_date += datetime.timedelta(days=1)
 
-                for date in dates_list:
-                    if date not in dates:
-                        new[date]=0
-                    else:
-                        new[date]=1
+                new = {date: 1 if date in dates else 0 for date in dates_list}
+        print(new)
         if new != {}:
             if len(new )==1:
                 self.frame_down_s.destroy()
                 self.frame_down_s = Frame(self.frame_s)
                 self.frame_down_s.pack()
-                for key in new:
-                    t = 'Всего одно занятие за период - '+ str(key)
-                self.err_gragh.config(text=t)
+                self.err_gragh.config(text=f"Всего одно занятие за период - {list(new.keys())[0]}")
             else:
                 self.frame_down_s.destroy()
                 self.frame_down_s = Frame(self.frame_s)
@@ -248,13 +233,9 @@ class Statistic():
 
     def period_cat(self, event):
         self.err_gragh.config(text="")
-        name_button = event.widget.cget('text')
         self.zapol_for_graph()
-        # заполнить self.graph_cat галочками из self.spisok_cat_check
-        if name_button == 'Показать\n по категориям':
-            a = self.graph_cat
-        else:
-            a = self.graph_zan
+        a = self.graph_cat if event.widget.cget('text') == 'Показать\n по категориям' else self.graph_zan
+
         if a != {}:
             self.frame_down_s.destroy()
             self.frame_down_s = Frame(self.frame_s)
@@ -269,7 +250,6 @@ class Statistic():
             fig.autofmt_xdate(rotation=45)
             ax.tick_params(axis='x', labelrotation=90)
             rects1 = ax.bar(ind, data, width)
-            # установить ширину столбцов = 1
             ax.set_xlim(-width, len(ind) + width)
             canvas = FigureCanvasTkAgg(fig, self.frame_down_s)
             canvas.draw()
@@ -278,43 +258,27 @@ class Statistic():
             self.err_gragh.config(text="Нет данных по выбранной категории\занятию")
 
     def zapol_for_graph(self):
-        self.graph_zan = {}
-        self.graph_cat = {}
-        self.cat_check =  []
-        self.cat_check2 = []
-        self.cat_one_graph = {}
-        self.zan_one_graph = {}
-
-        for value,var in self.save_checb_cat.items():
-            if var.get() == 1:
-                self.cat_check.append(value)
-
-        for value,var in self.save_checb.items():
-            if var.get() == 1:
-                self.cat_check2.append(value)
+        self.graph_zan = defaultdict(int)
+        self.graph_cat = defaultdict(int)
+        self.cat_check = [value for value, var in self.save_checb_cat.items() if var.get() == 1]
+        self.cat_check2 = [value for value, var in self.save_checb.items() if var.get() == 1]
+        self.cat_one_graph = defaultdict(list)
+        self.zan_one_graph = defaultdict(list)
 
         for i in self.time_zan:
             for j in self.time_zan[i]:
                 for k in self.time_zan[i][j]:
                     if k >= self.date1 and k <= self.date2:
                         if j in self.cat_check2:
-                            if j not in self.graph_zan:
-                                self.graph_zan[j] = 1
-                            else:
-                                self.graph_zan[j] += 1
-
-                            if j not in self.zan_one_graph:
-                                self.zan_one_graph[j] = []
-                            if k not in self.zan_one_graph[j]:
-                                self.zan_one_graph[j].append(k)
+                            self.graph_zan[j] += 1
+                            self.zan_one_graph[j].append(k)
 
                         if i in self.cat_check:
-                            if i not in self.graph_cat:
-                                self.graph_cat[i] = 1
-                            else:
-                                self.graph_cat[i] += 1
+                            self.graph_cat[i] += 1
+                            self.cat_one_graph[i].append(k)
 
-                            if i not in self.cat_one_graph:
-                                self.cat_one_graph[i] = []
-                            if k not in self.cat_one_graph[i]:
-                                self.cat_one_graph[i].append(k)
+        # convert defaultdict to dict if needed
+        self.graph_zan = dict(self.graph_zan)
+        self.graph_cat = dict(self.graph_cat)
+        self.cat_one_graph = dict(self.cat_one_graph)
+        self.zan_one_graph = dict(self.zan_one_graph)
