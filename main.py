@@ -12,12 +12,9 @@ import tkinter.scrolledtext as scrolledtext
 import changes
 import comments
 import time
-import cProfile 
 
 class Time_fix:
     def __init__(self):
-        start = time.time()
-        print('start')
         self.image_dict = {}
         for file in os.listdir("image"):
             name = os.path.splitext(file)[0]
@@ -88,9 +85,7 @@ class Time_fix:
         self.change_funk = changes.Change(self.time_zan, self.tab3, self.spisok_del, self.tab2, self.table, self.update_comment, self.static_funk)
         if str(self.need_date) != str(self.today):
             messagebox.showinfo("ВНИМАНИЕ", "Данные за дату "+str(self.need_date)+" не сохранены")
-        end = time.time()
-        print(end - start)
-
+            
     def del_all(self):
         self.zan = []
         self.table2()
@@ -321,7 +316,6 @@ class Time_fix:
 if __name__ == "__main__":
     root = Tk()
     example = Time_fix()
-    #cProfile.run('Time_fix()', filename='main_copy')
     root.geometry("970x510")
     root.title('Fix time')
     root.mainloop()
